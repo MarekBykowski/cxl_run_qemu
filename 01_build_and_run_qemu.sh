@@ -4,14 +4,12 @@ packages_dependency() {
 cat << 'EOF'
   Packages requirements:
   1. QEMU
-     QEMU requires:
-     - GCC at least 8
-     - eg. for SUSE running Santa Clara: git-core gcc-c++ make qemu glib2-devel libpixman-1-0-devel
-     Details on packages here https://wiki.qemu.org/Hosts/Linux.
-  2. linux-cxl
-     linux-cxl requires GCC
-  3. run_qemu
-     run_qemu requires mkosi, dracut, argbash
+     GCC at least 8, different distribution go with different packages. 
+     For example for SUSE running Santa Clara there are git-core, gcc-c++,
+     glib2-devel, libpixman-1-0-devel.
+     Details here https://wiki.qemu.org/Hosts/Linux
+  2. linux-cxl: GCC
+  3. run_qemu: mkosi, dracut, argbash
 
   Usually it requires the root privliges to install them.
 EOF
@@ -19,7 +17,7 @@ EOF
 
 usage() {
 	cat << EOF
-Usage: ${0} -c <command>:
+Usage: ${0} -c <command>
 	   all: build and run all
 	   clone: clone all the repos
 	   build_qemu: build qemu
