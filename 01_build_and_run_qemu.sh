@@ -4,7 +4,7 @@ packages_dependency() {
 cat << 'EOF'
   Packages requirements:
   1. QEMU
-     GCC at least 8, different distribution go with different packages. 
+     GCC at least 8, different distribution go with different packages.
      For example for SUSE running Santa Clara there are git-core, gcc-c++,
      glib2-devel, libpixman-1-0-devel.
      Details here https://wiki.qemu.org/Hosts/Linux
@@ -60,7 +60,7 @@ CMT
 	git clone -b master https://github.com/MarekBykowski/qemu.git
 	# on occasion it fails due to large history, shallow it then
 	if ! git clone -b wip https://github.com/MarekBykowski/linux-cxl.git; then
-		git clone -b wip --depth 1 https://github.com/MarekBykowski/linux-cxl.git  
+		git clone -b wip --depth 1 https://github.com/MarekBykowski/linux-cxl.git
 		pushd linux-cxl && git fetch --unshallow && popd
 	fi
 	git clone -b cxl_6 https://github.com/MarekBykowski/run_qemu.git
@@ -103,7 +103,7 @@ run_qemu() {
 	if [[ $1 == run ]]; then
 		rebuild=none
 	elif [[ $1 == build_run ]]; then
-		rebuild=img
+		rebuild=kmod
 	else
 		echo error rebuild for ${FUNCNAME[0]}
 		exit
@@ -115,9 +115,14 @@ run_qemu() {
 	PATH=$(IFS=:; echo "${export_paths[*]}"):$PATH
 	export PATH
 
+	test -d $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot || mkdir $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
+	ln -s $WORKDIR/../initramfs-5.19.0-rc3+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
+	ln -s $WORKDIR/../{OVMF_VARS.fd,OVMF_CODE.fd} $WORKDIR/linux-cxl/qbuild
+	ln -s $WORKDIR/../root.img $WORKDIR/linux-cxl/qbuild
+
 	qemu_bin=$WORKDIR/qemu/build/qemu-system-x86_64
 	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --git-qemu \
-		-r ${rebuild} --cxl-debug
+		--cxl-debug -r ${rebuild}
 	)
 }
 
