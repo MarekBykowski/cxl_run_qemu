@@ -33,27 +33,60 @@ test -d `pwd`/workdir || mkdir -p `pwd`/workdir
 cd `pwd`/workdir
 WORKDIR=`pwd`
 #echo $WORKDIR
+export_paths=()
 
 # cxl repos
 clone_repos() {
+	: << CMT
 	# for fetching a toolchain
-	# git clone -b master https://github.com/u-boot/u-boot.git
-	# get toolchain. Not really needed if the toolchain is already there.
-	#( cd u-boot; HOME=${WORKDIR}; ./tools/buildman/buildman --fetch-arch x86_64 )
-	# toolchain is now in $WORKDIR/.buildman-toolchains/gcc-11.1.0-nolibc/x86_64-linux/bin:$PATH
+	git clone -b master https://github.com/u-boot/u-boot.git
+
+	# install toolchain. Not really needed if the toolchain is already there.
+	( cd u-boot; HOME=${WORKDIR}; ./tools/buildman/buildman --fetch-arch x86_64 )
+	echo "toolchain is now in $WORKDIR/.buildman-toolchains/gcc-11.1.0-nolibc/x86_64-linux/bin"
+	export PATH=$WORKDIR/.buildman-toolchains/gcc-11.1.0-nolibc/x86_64-linux/bin:$PATH
+	fi
+CMT
+	# install mkosi
+	python3 -m pip install git+https://github.com/systemd/mkosi.git -t $WORKDIR
+
+	#install argbash
+	git clone https://github.com/matejak/argbash
+	(
+	cd argbash/resources
+	make install PREFIX=/nfs/site/disks/ive_gnr_pss_cxl_sw_interop/users/mbykowsx/cxl_run_qemu/workdir
+	)
+
 	git clone -b master https://github.com/MarekBykowski/qemu.git
-	git clone -b wip https://github.com/MarekBykowski/linux-cxl.git
+	# on occasion it fails due to large history, shallow it then
+	if ! git clone -b wip https://github.com/MarekBykowski/linux-cxl.git; then
+		git clone -b wip --depth 1 https://github.com/MarekBykowski/linux-cxl.git  
+		pushd linux-cxl && git fetch --unshallow && popd
+	fi
 	git clone -b cxl_6 https://github.com/MarekBykowski/run_qemu.git
 }
 
 build_qemu() {
 	echo ${FUNCNAME[0]}
 	cd $WORKDIR/qemu
+
+	# qemu uses pkg-config to retrive info about the libs installed.
+	#
+	#    ( eg. for gmodule-2.0 from glib:
+	#      prefix=/usr/intel/pkgs/glib/2.56.0, exec_prefix=${prefix},
+	#      libdir=${exec_prefix}/lib, includedir=${prefix}/include,
+	#      Libs: -L${libdir} -Wl,--export-dynamic -lgmodule-2.0 -pthread )
+	#
+	# In this case it requires glib is 2.56. It is out there,
+	# /usr/intel/pkgs/glib/2.56.0, but pkg-config didn't find it for being
+	# in 'non-standard' search path. Add the search path with PKG_CONFIG_PATH
+	export PKG_CONFIG_PATH=/usr/intel/pkgs/glib/2.56.0/lib/pkgconfig
+
 	test -d build || mkdir build
 	(
 	cd build
-	../configure --target-list=x86_64-softmmu
-	make -j8
+	../configure --target-list=x86_64-softmmu --cc=gcc --disable-werror
+	make -j4
 	)
 }
 
@@ -77,6 +110,11 @@ run_qemu() {
 	fi
 	(
 	cd $WORKDIR/linux-cxl
+
+	export_paths+=("/nfs/site/disks/ive_gnr_pss_cxl_sw_interop/users/mbykowsx/cxl_run_qemu/workdir/bin")
+	PATH=$(IFS=:; echo "${export_paths[*]}"):$PATH
+	export PATH
+
 	qemu_bin=$WORKDIR/qemu/build/qemu-system-x86_64
 	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --git-qemu \
 		-r ${rebuild} --cxl-debug
