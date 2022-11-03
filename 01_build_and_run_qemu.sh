@@ -76,7 +76,6 @@ CMT
 
 build_qemu() {
 	echo ${FUNCNAME[0]}
-	cd $WORKDIR/qemu
 
 	# qemu uses pkg-config to retrive info about the libs installed.
 	#
@@ -90,8 +89,9 @@ build_qemu() {
 	# PKG_CONFIG_PATH
 	export PKG_CONFIG_PATH=/usr/intel/pkgs/glib/2.56.0/lib/pkgconfig
 
-	test -d build || mkdir build
 	(
+	cd $WORKDIR/qemu
+	test -d build || mkdir build
 	cd build
 	../configure --target-list=x86_64-softmmu --cc=gcc --disable-werror
 	make -j4
