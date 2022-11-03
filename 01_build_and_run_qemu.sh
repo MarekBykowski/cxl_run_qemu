@@ -79,9 +79,9 @@ build_qemu() {
 	#      libdir=${exec_prefix}/lib, includedir=${prefix}/include,
 	#      Libs: -L${libdir} -Wl,--export-dynamic -lgmodule-2.0 -pthread )
 	#
-	# In this case it requires glib is 2.56. It is out there,
-	# /usr/intel/pkgs/glib/2.56.0, but pkg-config didn't find it for being
-	# in 'non-standard' search path. Add the search path with PKG_CONFIG_PATH
+	# As qemu requires glib 2.56, that is 'non-standard' search path,
+	# /usr/intel/pkgs/glib/2.56.0, let pkg-config know where it is with
+	# PKG_CONFIG_PATH
 	export PKG_CONFIG_PATH=/usr/intel/pkgs/glib/2.56.0/lib/pkgconfig
 
 	test -d build || mkdir build
