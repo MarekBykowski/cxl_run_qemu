@@ -54,7 +54,7 @@ CMT
 	git clone https://github.com/matejak/argbash
 	(
 	cd argbash/resources
-	make install PREFIX=/nfs/site/disks/ive_gnr_pss_cxl_sw_interop/users/mbykowsx/cxl_run_qemu/workdir
+	make install PREFIX=$WORKDIR
 	)
 
 	git clone -b master https://github.com/MarekBykowski/qemu.git
@@ -63,6 +63,8 @@ CMT
 		git clone -b wip --depth 1 https://github.com/MarekBykowski/linux-cxl.git
 		pushd linux-cxl && git fetch --unshallow && popd
 	fi
+
+	# finally clone run_qmu utility
 	git clone -b cxl_6 https://github.com/MarekBykowski/run_qemu.git
 }
 
