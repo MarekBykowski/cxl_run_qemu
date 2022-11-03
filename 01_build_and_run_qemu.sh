@@ -58,10 +58,16 @@ CMT
 	)
 
 	git clone -b master https://github.com/MarekBykowski/qemu.git
-	# on occasion it fails due to large history, shallow it then
-	if ! git clone -b wip https://github.com/MarekBykowski/linux-cxl.git; then
-		git clone -b wip --depth 1 https://github.com/MarekBykowski/linux-cxl.git
-		pushd linux-cxl && git fetch --unshallow && popd
+
+	# On occasion it fails ONLY on santa clara due to large history.
+	# Don't check out a single branch but shallow the whole history.
+	if git clone --depth 1 https://github.com/MarekBykowski/linux-cxl.git; then
+		(
+		cd linux-cxl
+		git checkout -b wip --track origin/wip
+		#git fetch --unshallow
+		#git fetch --depth 100
+		)
 	fi
 
 	# finally clone run_qmu utility
@@ -110,17 +116,19 @@ run_qemu() {
 		echo error rebuild for ${FUNCNAME[0]}
 		exit
 	fi
+
+	set -x
+	test -d $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot || mkdir -p $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
+	ln -s $WORKDIR/../initramfs-5.19.0-rc3+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
+	ln -s $WORKDIR/../{OVMF_VARS.fd,OVMF_CODE.fd} $WORKDIR/linux-cxl/qbuild
+	ln -s $WORKDIR/../root.img $WORKDIR/linux-cxl/qbuild
+
 	(
 	cd $WORKDIR/linux-cxl
 
 	export_paths+=("/nfs/site/disks/ive_gnr_pss_cxl_sw_interop/users/mbykowsx/cxl_run_qemu/workdir/bin")
 	PATH=$(IFS=:; echo "${export_paths[*]}"):$PATH
 	export PATH
-
-	test -d $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot || mkdir $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
-	ln -s $WORKDIR/../initramfs-5.19.0-rc3+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
-	ln -s $WORKDIR/../{OVMF_VARS.fd,OVMF_CODE.fd} $WORKDIR/linux-cxl/qbuild
-	ln -s $WORKDIR/../root.img $WORKDIR/linux-cxl/qbuild
 
 	qemu_bin=$WORKDIR/qemu/build/qemu-system-x86_64
 	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --git-qemu \
