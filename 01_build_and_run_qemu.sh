@@ -16,7 +16,7 @@ EOF
 }
 
 usage() {
-	cat << EOF
+cat << EOF
 Usage: ${0} -c <command>
 	   all: build and run all
 	   clone: clone all the repos
@@ -37,7 +37,7 @@ export_paths=()
 
 # cxl repos
 clone_repos() {
-	: << CMT
+	: <<- CMT
 	# for fetching a toolchain
 	git clone -b master https://github.com/u-boot/u-boot.git
 
@@ -46,7 +46,9 @@ clone_repos() {
 	echo "toolchain is now in $WORKDIR/.buildman-toolchains/gcc-11.1.0-nolibc/x86_64-linux/bin"
 	export PATH=$WORKDIR/.buildman-toolchains/gcc-11.1.0-nolibc/x86_64-linux/bin:$PATH
 	fi
-CMT
+	CMT
+
+	export https_proxy=http://proxy-us.intel.com:912
 	# install mkosi
 	python3 -m pip install git+https://github.com/systemd/mkosi.git -t $WORKDIR
 
