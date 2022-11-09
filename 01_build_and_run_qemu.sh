@@ -61,7 +61,7 @@ clone_repos() {
 
 	git clone -b master https://github.com/MarekBykowski/qemu.git
 	git clone -b wip https://github.com/MarekBykowski/linux-cxl.git
-	git clone -b cxl_6 https://github.com/MarekBykowski/run_qemu.git
+	git clone -b santa_clara https://github.com/MarekBykowski/run_qemu.git
 }
 
 build_qemu() {
