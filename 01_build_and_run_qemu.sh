@@ -52,7 +52,7 @@ build_qemu() {
 	test -d build || mkdir build
 	(
 	cd build
-	../configure --target-list=x86_64-softmmu
+	../configure --target-list=x86_64-softmmu --enable-slirp
 	make -j8
 	)
 }
@@ -78,9 +78,12 @@ run_qemu() {
 	(
 	cd $WORKDIR/linux-cxl
 	qemu_bin=$WORKDIR/qemu/build/qemu-system-x86_64
-	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --git-qemu \
-		-r ${rebuild} --cxl-debug
+	#qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --git-qemu \
+	#	-r ${rebuild} --no-ndctl-build --cxl-debug #--gdb
+	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --cxl-single --git-qemu \
+		-r ${rebuild} --no-ndctl-build --cxl-debug #--gdb
 	)
+
 }
 
 
@@ -107,6 +110,8 @@ case $arg in
     build_qemu ;;
   config_linux)
     configure_linux-cxl ;;
-  run_qemu)
+  run_qemu_r)
+    run_qemu run ;;
+  run_qemu_b)
     run_qemu build_run ;;
 esac
