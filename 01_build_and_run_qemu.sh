@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# set verbose level
+__VERBOSE=6
+
+declare -A LOG_LEVELS
+# https://en.wikipedia.org/wiki/Syslog#Severity_level
+#LOG_LEVELS=([0]="emerg" [1]="alert" [2]="crit" [3]="err" [4]="warning" [5]="notice" [6]="info" [7]="debug")
+LOG_LEVELS=([emerg]=0 [alert]=1 [crit]=2 [err]=3 [warning]=4 [notice]=5 [info]=6 [debug]=7)
+function log () {
+  local LEVEL=${1}
+  shift
+  if [ ${__VERBOSE} -ge ${LOG_LEVELS[$LEVEL]} ]; then
+    echo ${LEVEL} "$@"
+  fi
+}
+
 packages_dependency() {
 cat << 'EOF'
   Packages requirements:
@@ -34,9 +49,12 @@ cd `pwd`/workdir
 WORKDIR=`pwd`
 #echo $WORKDIR
 export_paths=()
+export_pkg_config_path=()
 
 # cxl repos
 clone_repos() {
+	log info ${FUNCNAME[0]}
+
 	: <<- CMT
 	# for fetching a toolchain
 	git clone -b master https://github.com/u-boot/u-boot.git
@@ -52,11 +70,36 @@ clone_repos() {
 	# install mkosi
 	python3 -m pip install git+https://github.com/systemd/mkosi.git -t $WORKDIR
 
-	#install argbash
+	# install argbash
 	git clone https://github.com/matejak/argbash
 	(
 	cd argbash/resources
 	make install PREFIX=$WORKDIR
+	)
+
+	# install slirp
+	# To install slirp we need meson and ninja, and pkg-config for libslirp.so
+	# install meson first
+	test -d $WORKDIR/bin || mkdir -p $WORKDIR/bin
+	python3 -m pip install meson -t $WORKDIR/bin
+
+	# It gets installed to bin and cannot find dependency later on. Work it around
+	cp $WORKDIR/bin/bin/meson $WORKDIR/bin/meson
+
+	# install ninja
+	python3 -m pip install ninja -t $WORKDIR/bin
+
+	export_paths+=("$WORKDIR/bin")
+	PATH=$(IFS=:; echo "${export_paths[*]}"):$PATH
+	export PATH
+
+	meson --help
+	git clone https://github.com/openSUSE/qemu-slirp.git
+	(
+	cd qemu-slirp
+	#meson configure build
+	meson setup -Dprefix=${WORKDIR}/slirp build/
+	ninja -C build install
 	)
 
 	git clone -b master https://github.com/MarekBykowski/qemu.git
@@ -65,31 +108,43 @@ clone_repos() {
 }
 
 build_qemu() {
-	echo ${FUNCNAME[0]}
+	log info ${FUNCNAME[0]}
 
-	# qemu uses pkg-config to retrive info about the libs installed.
+	# qemu uses pkg-config to retrive info about the headers and libs
+	# installed.
 	#
 	#    ( eg. for gmodule-2.0 from glib:
 	#      prefix=/usr/intel/pkgs/glib/2.56.0, exec_prefix=${prefix},
 	#      libdir=${exec_prefix}/lib, includedir=${prefix}/include,
 	#      Libs: -L${libdir} -Wl,--export-dynamic -lgmodule-2.0 -pthread )
 	#
-	# As qemu requires glib 2.56, that is 'non-standard' search path,
+	# As qemu requires glib 2.56, that is a 'non-standard' search path,
 	# /usr/intel/pkgs/glib/2.56.0, let pkg-config know where it is with
 	# PKG_CONFIG_PATH
-	export PKG_CONFIG_PATH=/usr/intel/pkgs/glib/2.56.0/lib/pkgconfig
+	export_pkg_config_path+=("/usr/intel/pkgs/glib/2.56.0/lib/pkgconfig")
 
+	# Also qemu needs slirp for networking
+	export_pkg_config_path+=("$WORKDIR/slirp/lib64/pkgconfig")
+	PKG_CONFIG_PATH=$(IFS=:; echo "${export_pkg_config_path[*]}")
+	export PKG_CONFIG_PATH
+
+	log debug export_pkg_config_path ${export_pkg_config_path[*]}
+	log debug PKG_CONFIG_PATH $PKG_CONFIG_PATH
+
+	exit 0
 	(
 	cd $WORKDIR/qemu
 	test -d build || mkdir build
 	cd build
-	../configure --target-list=x86_64-softmmu --cc=gcc --disable-werror
+	echo PKG_CONFIG_PATH $PKG_CONFIG_PATH
+	../configure --target-list=x86_64-softmmu --cc=gcc --disable-werror --enable-slirp
 	make -j4
 	)
 }
 
 configure_linux-cxl() {
-	echo ${FUNCNAME[0]}
+	log info ${FUNCNAME[0]}
+
 	(
 	cd $WORKDIR/linux-cxl
 	ARCH=x86 make cxl_defconfig
@@ -97,7 +152,8 @@ configure_linux-cxl() {
 }
 
 run_qemu() {
-	echo ${FUNCNAME[0]}
+	log info ${FUNCNAME[0]}
+
 	if [[ $1 == run ]]; then
 		rebuild=none
 	elif [[ $1 == build_run ]]; then
@@ -108,19 +164,19 @@ run_qemu() {
 	fi
 
 	test -d $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot || mkdir -p $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
-	ln -s $WORKDIR/../initramfs-5.19.0-rc3+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
-	ln -s $WORKDIR/../{OVMF_VARS.fd,OVMF_CODE.fd} $WORKDIR/linux-cxl/qbuild
-	ln -s $WORKDIR/../root.img $WORKDIR/linux-cxl/qbuild
+	ln -sf $WORKDIR/../initramfs-5.19.0-rc3+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
+	ln -sf $WORKDIR/../{OVMF_VARS.fd,OVMF_CODE.fd} $WORKDIR/linux-cxl/qbuild
+	ln -sf $WORKDIR/../root.img $WORKDIR/linux-cxl/qbuild
 
 	(
 	cd $WORKDIR/linux-cxl
 
-	export_paths+=("/nfs/site/disks/ive_gnr_pss_cxl_sw_interop/users/mbykowsx/cxl_run_qemu/workdir/bin")
+	export_paths+=("$WORKDIR/bin")
 	PATH=$(IFS=:; echo "${export_paths[*]}"):$PATH
 	export PATH
 
 	qemu_bin=$WORKDIR/qemu/build/qemu-system-x86_64
-	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --git-qemu \
+	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --cxl-single --git-qemu \
 		--cxl-debug -r ${rebuild}
 	)
 }
