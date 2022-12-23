@@ -164,7 +164,9 @@ run_qemu() {
 	fi
 
 	test -d $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot || mkdir -p $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
+	# qemu requires initramfs with version as kernel is
 	ln -sf $WORKDIR/../initramfs-5.19.0-rc3+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
+	ln -sf $WORKDIR/../initramfs-5.19.0-rc3+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot/initramfs-6.1.0-rc4+.img
 	ln -sf $WORKDIR/../{OVMF_VARS.fd,OVMF_CODE.fd} $WORKDIR/linux-cxl/qbuild
 	ln -sf $WORKDIR/../root.img $WORKDIR/linux-cxl/qbuild
 
