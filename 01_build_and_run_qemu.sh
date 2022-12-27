@@ -42,8 +42,8 @@ clone_repos() {
 	#( cd u-boot; HOME=${WORKDIR}; ./tools/buildman/buildman --fetch-arch x86_64 )
 	# toolchain is now in $WORKDIR/.buildman-toolchains/gcc-11.1.0-nolibc/x86_64-linux/bin:$PATH
 	git clone -b master https://github.com/MarekBykowski/qemu.git
-	git clone -b wip https://github.com/MarekBykowski/linux-cxl.git
-	git clone -b cxl_6 https://github.com/MarekBykowski/run_qemu.git
+	git clone -b wip_rebased_15_12_2022 https://github.com/MarekBykowski/linux-cxl.git
+	git clone -b master https://github.com/MarekBykowski/run_qemu.git
 }
 
 build_qemu() {
