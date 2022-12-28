@@ -83,7 +83,7 @@ run_qemu() {
 	#qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --git-qemu \
 	#	-r ${rebuild} --no-ndctl-build --cxl-debug #--gdb
 	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --cxl-single --git-qemu \
-		-r ${rebuild} --no-ndctl-build --cxl-debug --gdb
+		-r ${rebuild} --no-ndctl-build --cxl-debug #--gdb
 	)
 
 }
