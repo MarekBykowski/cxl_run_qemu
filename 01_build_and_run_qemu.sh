@@ -41,9 +41,11 @@ clone_repos() {
 	# get toolchain. Not really needed if the toolchain is already there.
 	#( cd u-boot; HOME=${WORKDIR}; ./tools/buildman/buildman --fetch-arch x86_64 )
 	# toolchain is now in $WORKDIR/.buildman-toolchains/gcc-11.1.0-nolibc/x86_64-linux/bin:$PATH
-	git clone -b master https://github.com/MarekBykowski/qemu.git
-	git clone -b wip_rebased_15_12_2022 https://github.com/MarekBykowski/linux-cxl.git
-	git clone -b master https://github.com/MarekBykowski/run_qemu.git
+
+	# For tds we clone over ssh
+	git clone -b master git@github.com:MarekBykowski/qemu.git
+	git clone -b wip_rebased_15_12_2022 git@github.com:MarekBykowski/linux-cxl.git
+	git clone -b master git@github.com:MarekBykowski/run_qemu.git
 }
 
 build_qemu() {
@@ -81,7 +83,7 @@ run_qemu() {
 	#qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --git-qemu \
 	#	-r ${rebuild} --no-ndctl-build --cxl-debug #--gdb
 	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --cxl-single --git-qemu \
-		-r ${rebuild} --no-ndctl-build --cxl-debug #--gdb
+		-r ${rebuild} --no-ndctl-build --cxl-debug --gdb
 	)
 
 }
