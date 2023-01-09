@@ -131,7 +131,6 @@ build_qemu() {
 	log debug export_pkg_config_path ${export_pkg_config_path[*]}
 	log debug PKG_CONFIG_PATH $PKG_CONFIG_PATH
 
-	exit 0
 	(
 	cd $WORKDIR/qemu
 	test -d build || mkdir build
