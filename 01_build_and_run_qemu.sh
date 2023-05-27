@@ -32,6 +32,7 @@ EOF
 test -d `pwd`/workdir || mkdir -p `pwd`/workdir
 cd `pwd`/workdir
 WORKDIR=`pwd`
+SCRIPT_NAME=$0
 #echo $WORKDIR
 
 # cxl repos
@@ -67,6 +68,15 @@ configure_linux-cxl() {
 	)
 }
 
+get_ovmf() {
+	local PAYLOAD_LINE=$(awk '/^__OVMF_VARS_BEGINS__/,/^__OVMF_VARS_ENDS__/ { print NR + 1; exit 0; }' ${SCRIPT_NAME})
+	echo "mb: OVMF_VARS lines $PAYLOAD_LINE"
+	PAYLOAD_LINE=$(awk '/^__OVMF_CODE_BEGINS__/,/^__OVMF_CODE_ENDS__/ { print NR + 1; exit 0; }' ${SCRIPT_NAME})
+	echo "mb: OVMF_CODE lines $PAYLOAD_LINE"
+	exit 0
+	#tail -n +${PAYLOAD_LINE} ${SCRIPT_NAME} | tar -zpvx -C ${WORKDIR}/..
+}
+
 run_qemu() {
 	echo ${FUNCNAME[0]}
 	if [[ $1 == run ]]; then
@@ -79,13 +89,17 @@ run_qemu() {
 	fi
 
 	test -d $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot || mkdir -p $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
+
+	: <<- 'COMMENT'
 	# qemu requires initramfs with the version of a kernel. Go check it.
 	pushd $WORKDIR/linux-cxl
 	kver=$(make -s kernelrelease)
 	popd
+	ln -sf $WORKDIR/../initramfs-5.19.0-rc3+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot/initramfs-$kver.img || exit 127
+	COMMENT
+
 	echo linking ovmfs
-	#ln -sf $WORKDIR/../initramfs-5.19.0-rc3+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot/initramfs-$kver.img || exit 127
-	ln -sf $WORKDIR/../{OVMF_VARS.fd,OVMF_CODE.fd} $WORKDIR/linux-cxl/qbuild || exit 127
+	ln -sf $WORKDIR/../{OVMF_VARS.fd,OVMF_CODE.fd} $WORKDIR/linux-cxl/qbuild || get_ovmf
 
 	(
 	cd $WORKDIR/linux-cxl
@@ -129,3 +143,6 @@ case $arg in
   run_qemu_b)
     run_qemu build_run ;;
 esac
+
+exit 0
+__OVMF_VARS_BEGINS__
