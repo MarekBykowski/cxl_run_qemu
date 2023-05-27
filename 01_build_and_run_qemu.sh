@@ -77,13 +77,25 @@ run_qemu() {
 		echo error rebuild for ${FUNCNAME[0]}
 		exit
 	fi
+
+	test -d $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot || mkdir -p $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot
+	# qemu requires initramfs with the version of a kernel. Go check it.
+	pushd $WORKDIR/linux-cxl
+	kver=$(make -s kernelrelease)
+	popd
+	echo linking ovmfs
+	#ln -sf $WORKDIR/../initramfs-5.19.0-rc3+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot/initramfs-$kver.img || exit 127
+	ln -sf $WORKDIR/../{OVMF_VARS.fd,OVMF_CODE.fd} $WORKDIR/linux-cxl/qbuild || exit 127
+
 	(
 	cd $WORKDIR/linux-cxl
 	qemu_bin=$WORKDIR/qemu/build/qemu-system-x86_64
 	#qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --git-qemu \
 	#	-r ${rebuild} --no-ndctl-build --cxl-debug #--gdb
+	set +x
 	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --cxl-single --git-qemu \
-		-r ${rebuild} --no-ndctl-build --cxl-debug #--gdb
+		--cxl-debug -r ${rebuild}
+	set -x
 	)
 
 }
