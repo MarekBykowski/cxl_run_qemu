@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 packages_dependency() {
 cat << 'EOF'
@@ -22,7 +22,7 @@ Usage: ${0} -c <command>
 	   clone: clone all the repos
 	   build_qemu: build qemu
 	   config_linux: configure Linux kernel. run_qemu requires that
-	   run_qemu: run qemu with cxl until linux prompt
+	   run_qemu_br: build&run qemu with cxl until linux prompt
 
 EOF
 	packages_dependency
@@ -44,9 +44,22 @@ clone_repos() {
 	# toolchain is now in $WORKDIR/.buildman-toolchains/gcc-11.1.0-nolibc/x86_64-linux/bin:$PATH
 
 	# For tds we clone over ssh
-	git clone -b master git@github.com:MarekBykowski/qemu.git
-	git clone -b wip_rebased_15_12_2022 git@github.com:MarekBykowski/linux-cxl.git
-	git clone -b master git@github.com:MarekBykowski/run_qemu.git
+	if timeout 10 git clone -b master git@github.com:MarekBykowski/qemu.git; then
+		:;
+	else git clone -b master  https://github.com/MarekBykowski/qemu.git
+	fi
+
+	if timeout 10 git clone -b wip_rebased_15_12_2022 git@github.com:MarekBykowski/linux-cxl.git; then
+		:;
+	else
+		git clone -b wip_rebased_15_12_2022 https://github.com/MarekBykowski/linux-cxl.git
+	fi
+
+	if timeout 10 git clone -b master_no_ovmf git@github.com:MarekBykowski/run_qemu.git; then
+		:;
+	else
+		git clone -b master_no_ovmf https://github.com/MarekBykowski/run_qemu.git
+	fi
 }
 
 build_qemu() {
@@ -64,7 +77,8 @@ configure_linux-cxl() {
 	echo ${FUNCNAME[0]}
 	(
 	cd $WORKDIR/linux-cxl
-	ARCH=x86 make cxl_defconfig
+	ARCH=x86 make cxl_cxl_pmem_lttng_ftrace_buildin_bootconfig_gdb_defconfig
+	#ARCH=x86 make cxl_defconfig
 	)
 }
 
@@ -137,7 +151,7 @@ case $arg in
     configure_linux-cxl ;;
   run_qemu_r)
     run_qemu run ;;
-  run_qemu_b)
+  run_qemu_br)
     run_qemu build_run ;;
 esac
 
