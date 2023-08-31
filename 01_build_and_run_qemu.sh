@@ -68,7 +68,7 @@ build_qemu() {
 	test -d build || mkdir build
 	(
 	cd build
-	../configure --target-list=x86_64-softmmu --enable-slirp
+	../configure --target-list=x86_64-softmmu --enable-slirp --enable-kvm
 	make -j8
 	)
 }
