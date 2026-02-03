@@ -47,7 +47,7 @@ EOF
 test -d `pwd`/workdir || mkdir -p `pwd`/workdir
 cd `pwd`/workdir
 WORKDIR=`pwd`
-#echo $WORKDIR
+echo WORKDIR:$WORKDIR
 export_paths=()
 export_pkg_config_path=()
 
@@ -55,20 +55,16 @@ export_pkg_config_path=()
 clone_repos() {
 	log info ${FUNCNAME[0]}
 
-	: <<- CMT
-	# for fetching a toolchain
+	: <<- EOF
+	# install toolchain
 	git clone -b master https://github.com/u-boot/u-boot.git
-
-	# install toolchain. Not really needed if the toolchain is already there.
-	( cd u-boot; HOME=${WORKDIR}; ./tools/buildman/buildman --fetch-arch x86_64 )
-	echo "toolchain is now in $WORKDIR/.buildman-toolchains/gcc-11.1.0-nolibc/x86_64-linux/bin"
-	export PATH=$WORKDIR/.buildman-toolchains/gcc-11.1.0-nolibc/x86_64-linux/bin:$PATH
-	fi
-	CMT
-
-	export https_proxy=http://proxy-us.intel.com:912
-	# install mkosi
-	python3 -m pip install git+https://github.com/systemd/mkosi.git -t $WORKDIR
+	cd u-boot
+	./tools/buildman/buildman --fetch-arch list
+	./tools/buildman/buildman --fetch-arch <arch>
+	export PATH=$HOME/.buildman-toolchains/<gcc>/bin:$PATH
+	export ARCH=x86
+	export CROSS_COMPILE=i386-linux-
+	EOF
 
 	# install argbash
 	git clone https://github.com/matejak/argbash
@@ -77,30 +73,9 @@ clone_repos() {
 	make install PREFIX=$WORKDIR
 	)
 
-	# install slirp
-	# To install slirp we need meson and ninja, and pkg-config for libslirp.so
-	# install meson first
-	test -d $WORKDIR/bin || mkdir -p $WORKDIR/bin
-	python3 -m pip install meson -t $WORKDIR/bin
-
-	# It gets installed to bin and cannot find dependency later on. Work it around
-	cp $WORKDIR/bin/bin/meson $WORKDIR/bin/meson
-
-	# install ninja
-	python3 -m pip install ninja -t $WORKDIR/bin
-
 	export_paths+=("$WORKDIR/bin")
 	PATH=$(IFS=:; echo "${export_paths[*]}"):$PATH
 	export PATH
-
-	meson --help
-	git clone https://github.com/openSUSE/qemu-slirp.git
-	(
-	cd qemu-slirp
-	#meson configure build
-	meson setup -Dprefix=${WORKDIR}/slirp build/
-	ninja -C build install
-	)
 
 	git clone -b master https://github.com/MarekBykowski/qemu.git
 	git clone -b wip_rebased_15_12_2022 https://github.com/MarekBykowski/linux-cxl.git
@@ -118,24 +93,11 @@ build_qemu() {
 	#      libdir=${exec_prefix}/lib, includedir=${prefix}/include,
 	#      Libs: -L${libdir} -Wl,--export-dynamic -lgmodule-2.0 -pthread )
 	#
-	# As qemu requires glib 2.56, that is a 'non-standard' search path,
-	# /usr/intel/pkgs/glib/2.56.0, let pkg-config know where it is with
-	# PKG_CONFIG_PATH
-	export_pkg_config_path+=("/usr/intel/pkgs/glib/2.56.0/lib/pkgconfig")
-
-	# Also qemu needs slirp for networking
-	export_pkg_config_path+=("$WORKDIR/slirp/lib64/pkgconfig")
-	PKG_CONFIG_PATH=$(IFS=:; echo "${export_pkg_config_path[*]}")
-	export PKG_CONFIG_PATH
-
-	log debug export_pkg_config_path ${export_pkg_config_path[*]}
-	log debug PKG_CONFIG_PATH $PKG_CONFIG_PATH
 
 	(
 	cd $WORKDIR/qemu
 	test -d build || mkdir build
 	cd build
-	echo PKG_CONFIG_PATH $PKG_CONFIG_PATH
 	../configure --target-list=x86_64-softmmu --cc=gcc --disable-werror --enable-slirp
 	make -j4
 	)
@@ -167,7 +129,7 @@ run_qemu() {
 	pushd $WORKDIR/linux-cxl
 	kver=$(make -s kernelrelease)
 	popd
-	ln -sf $WORKDIR/../initramfs-5.19.0-rc3+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot/initramfs-$kver.img
+	ln -sf $WORKDIR/../initramfs-6.1.0-rc4+.img $WORKDIR/linux-cxl/qbuild/mkosi.extra/boot/initramfs-$kver.img
 	ln -sf $WORKDIR/../{OVMF_VARS.fd,OVMF_CODE.fd} $WORKDIR/linux-cxl/qbuild
 	ln -sf $WORKDIR/../root.img $WORKDIR/linux-cxl/qbuild
 
@@ -179,8 +141,8 @@ run_qemu() {
 	export PATH
 
 	qemu_bin=$WORKDIR/qemu/build/qemu-system-x86_64
-	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --cxl-single --git-qemu \
-		--cxl-debug -r ${rebuild}
+
+	qemu=${qemu_bin} ../run_qemu/run_qemu.sh --cxl --cxl-single --git-qemu --cxl-debug -r ${rebuild}
 	)
 }
 
