@@ -2,7 +2,7 @@
 
 branches:
 - `master`: main branch for the systems in which the user has sudo rights
-- `docker-generic`: for containers which are not ready to run dracut and mkosi but which have the sudo rights. It must have the artifcats copied before running the script
+- `docker-generic`: for system without sudo or for containers which are not designed to run `dracut` and `mkosi`. It must have the artifcats copied before running the script
 
 Artifacts needed are in this repo packages link.
 
