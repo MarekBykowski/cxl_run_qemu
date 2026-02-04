@@ -79,7 +79,7 @@ clone_repos() {
 
 	git clone -b master https://github.com/MarekBykowski/qemu.git
 	git clone -b wip_rebased_15_12_2022 https://github.com/MarekBykowski/linux-cxl.git
-	git clone -b santa_clara https://github.com/MarekBykowski/run_qemu.git
+	git clone -b docker-generic https://github.com/MarekBykowski/run_qemu.git
 }
 
 build_qemu() {
