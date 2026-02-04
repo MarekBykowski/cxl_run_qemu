@@ -12,7 +12,7 @@ Pick `docker-generic` if unsure.
 Howto for downlading artifacts in here https://github.com/MarekBykowski/ghcr-publish-install-packages.
 
 ```
-git remote add ghcr [https://github.com/user/repo.git](https://github.com/MarekBykowski/ghcr-publish-install-packages)
+git remote add ghcr https://github.com/MarekBykowski/ghcr-publish-install-packages
 git fetch ghcr
-git merge ghcr/ma --allow-unrelated-histories
+git merge ghcr/master --allow-unrelated-histories
 ```
