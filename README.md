@@ -7,4 +7,9 @@ branches:
 
 Artifacts needed are in this repo packages link.
 
-Pick `docker-generic` if unsure. Howto for downlading artifacts in here https://github.com/MarekBykowski/ghcr-publish-install-packages
+Pick `docker-generic` if unsure. 
+
+Howto for downlading artifacts in here https://github.com/MarekBykowski/ghcr-publish-install-packages. Clone the repo with `.` so that help scripts will land right into your current directory.
+```
+git clone https://github.com/user/repo.git .
+```
