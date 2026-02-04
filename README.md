@@ -1,4 +1,4 @@
-# cxl_run_qemu
+## Intro
 
 branches:
 - master: branch main is for the system in which the user has sudo rights.
@@ -8,6 +8,8 @@ branches:
 Artifacts needed are in this repo packages link.
 
 Pick `docker-generic` if unsure. 
+
+## Artifacts
 
 Howto for downlading artifacts in here https://github.com/MarekBykowski/ghcr-publish-install-packages. 
 
@@ -28,4 +30,26 @@ rm -rf "$tmpdir"
 ```
 tar -xJf artifacts-<rundom number>/artifacts.tar.xz
 ```
-- last step is to run `01_build_and_run_qemu.sh` script that should do all the job up to getting you to the Linux prompt
+
+## Toolchain
+```
+git clone -b master https://github.com/u-boot/u-boot.git                
+cd u-boot                                                               
+./tools/buildman/buildman --fetch-arch list                             
+./tools/buildman/buildman --fetch-arch <arch>                           
+export PATH=$HOME/.buildman-toolchains/<gcc>/bin:$PATH                  
+export ARCH=x86                                                         
+export CROSS_COMPILE=i386-linux-                              
+```
+
+## Install dependencies/apt packages
+
+```
+sudo apt update; sudo apt-get install -y autoconf
+```
+
+## Run
+```
+./01_build_and_run_qemu.sh -c <command>
+```
+
