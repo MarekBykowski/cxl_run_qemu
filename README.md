@@ -9,10 +9,15 @@ Artifacts needed are in this repo packages link.
 
 Pick `docker-generic` if unsure. 
 
-Howto for downlading artifacts in here https://github.com/MarekBykowski/ghcr-publish-install-packages.
+Howto for downlading artifacts in here https://github.com/MarekBykowski/ghcr-publish-install-packages. Copy the files from that repo
+```
+tmpdir=$(mktemp -d)
+git clone --depth=1 --branch master \
+   https://github.com/MarekBykowski/ghcr-publish-install-packages \
+   "$tmpdir"
+cp -a "$tmpdir"/Dockerfile-artifacts "$tmpdir"/publish-install.sh .
+rm -rf "$tmpdir"
+```
 
-```
-git remote add ghcr https://github.com/MarekBykowski/ghcr-publish-install-packages
-git fetch ghcr
-git merge ghcr/master --allow-unrelated-histories
-```
+... and run `publish-install.sh install`. It should download the artifacts to `artifacts-<rundom number>`. 
+Untar and copy over to the main diretory.
