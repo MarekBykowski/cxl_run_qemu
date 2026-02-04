@@ -11,7 +11,7 @@ Pick `docker-generic` if unsure.
 
 ## Artifacts
 
-Howto for downlading artifacts in here https://github.com/MarekBykowski/ghcr-publish-install-packages. 
+I have put together the sripts for publishing and installing the artifacts using the docker https://github.com/MarekBykowski/ghcr-publish-install-packages. 
 
 Below are steps for cloning that repo with the help scripts and running them.
 
