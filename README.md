@@ -12,7 +12,7 @@ Pick `docker-generic` if unsure.
 
 I have put together the sripts for publishing and installing the artifacts using the docker https://github.com/MarekBykowski/ghcr-publish-install-packages. 
 
-Below are steps for cloning that repo with the help scripts and running them.
+Below are steps for cloning that repo with the scripts using Docker and running them.
 
 - copy the files from that repo
 ```
