@@ -9,7 +9,11 @@ Artifacts needed are in this repo packages link.
 
 Pick `docker-generic` if unsure. 
 
-Howto for downlading artifacts in here https://github.com/MarekBykowski/ghcr-publish-install-packages. Copy the files from that repo
+Howto for downlading artifacts in here https://github.com/MarekBykowski/ghcr-publish-install-packages. 
+
+Below are steps for cloning that repo with the help scripts and running them.
+
+- copy the files from that repo
 ```
 tmpdir=$(mktemp -d)
 git clone --depth=1 --branch master \
@@ -19,5 +23,6 @@ cp -a "$tmpdir"/Dockerfile-artifacts "$tmpdir"/publish-install.sh .
 rm -rf "$tmpdir"
 ```
 
-... and run `publish-install.sh install`. It should download the artifacts to `artifacts-<rundom number>`. 
-Untar and copy over to the main diretory.
+- run `publish-install.sh install`: It should download the artifacts to `artifacts-<rundom number>`.
+- copy them from `artifacts-<rundom number>` to the current dir and untar
+- last step is to run `01_build_and_run_qemu.sh` script that should do all the job up to getting you to the Linux prompt
