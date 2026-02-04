@@ -24,5 +24,8 @@ rm -rf "$tmpdir"
 ```
 
 - run `publish-install.sh install`: It should download the artifacts to `artifacts-<rundom number>`.
-- copy them from `artifacts-<rundom number>` to the current dir and untar
+- untar
+```
+tar -xJf artifacts-<rundom number>/artifacts.tar.xz
+```
 - last step is to run `01_build_and_run_qemu.sh` script that should do all the job up to getting you to the Linux prompt
