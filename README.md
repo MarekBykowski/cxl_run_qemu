@@ -45,6 +45,8 @@ export CROSS_COMPILE=i386-linux-
 
 ```
 sudo apt update; sudo apt-get install -y autoconf
+sudo apt install -y ninja-build pkg-config libglib2.0-dev
+sudo apt install -y libslirp-dev
 ```
 
 ## Run
