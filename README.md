@@ -9,7 +9,10 @@ Artifacts needed are in this repo packages link.
 
 Pick `docker-generic` if unsure. 
 
-Howto for downlading artifacts in here https://github.com/MarekBykowski/ghcr-publish-install-packages. Clone the repo with `.` so that help scripts will land right into your current directory.
+Howto for downlading artifacts in here https://github.com/MarekBykowski/ghcr-publish-install-packages.
+
 ```
-git clone https://github.com/user/repo.git .
+git remote add ghcr [https://github.com/user/repo.git](https://github.com/MarekBykowski/ghcr-publish-install-packages)
+git fetch ghcr
+git merge ghcr/ma --allow-unrelated-histories
 ```
