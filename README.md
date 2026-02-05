@@ -55,4 +55,24 @@ sudo apt install -y flex bison libelf-dev
 ./01_build_and_run_qemu.sh -c <command>
 ```
 
+## Newest QEMU requires Python 3.19
+```
+sudo apt install -y \
+  build-essential \
+  libssl-dev \
+  zlib1g-dev \
+  libncurses5-dev \
+  libbz2-dev \
+  libreadline-dev \
+  libsqlite3-dev \
+  libffi-dev \
+  liblzma-dev \
+  wget
 
+wget https://www.python.org/ftp/python/3.9.19/Python-3.9.19.tgz
+tar -xf Python-3.9.19.tgz
+cd Python-3.9.19
+./configure --prefix=/opt/python3.9
+make -j$(nproc)
+sudo make install
+```
