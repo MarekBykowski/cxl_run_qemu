@@ -108,7 +108,8 @@ configure_linux-cxl() {
 
 	(
 	cd $WORKDIR/linux-cxl
-	ARCH=x86 make cxl_defconfig
+	#ARCH=x86 make cxl_defconfig
+	ARCH=x86 make cxl_virtio_defconfig
 	)
 }
 
