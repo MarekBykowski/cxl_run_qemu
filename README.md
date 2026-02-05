@@ -76,3 +76,8 @@ cd Python-3.9.19
 make -j$(nproc)
 sudo make install
 ```
+
+Then when building for `qemu`
+```
+../configure --python=/opt/python3.9/bin/python3.9  --target-list=x86_64-softmmu --cc=gcc --disable-werror --enable-slirp
+```
