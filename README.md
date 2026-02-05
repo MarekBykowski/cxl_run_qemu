@@ -79,5 +79,6 @@ sudo make install
 
 Then when building for `qemu`
 ```
+/opt/python3.9/bin/python3.9  -m pip install --user tomli
 ../configure --python=/opt/python3.9/bin/python3.9  --target-list=x86_64-softmmu --cc=gcc --disable-werror --enable-slirp
 ```
